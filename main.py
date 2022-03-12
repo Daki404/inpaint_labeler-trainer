@@ -6,7 +6,8 @@ from PyQt5.QtCore import *
 
 from glob import glob
 import numpy as np
-import qimage2ndarray
+
+from worker import Worker
 
 form_class = uic.loadUiType("./main.ui")[0]
 
@@ -94,7 +95,11 @@ class MainClass(QWidget, form_class):
         self.save_btn.clicked.connect(self.save_label)
 
         self.crop_btn.clicked.connect(self.crop_image)
+        self.train_btn.clicked.connect(self.train_model)
 
+        # Terminal - signal
+        self.worker = Worker()
+        self.worker.outSignal.connect(self.logging)
         self.show()
 
     def openImageFile(self, image_file=False):
@@ -164,7 +169,12 @@ class MainClass(QWidget, form_class):
         self.cnt_label.setText(str(self.crop_cnt))
 
     def train_model(self):
-        pass
+        command = "python train.py --obj sillicon --data_path datasets"
+        self.worker.run_command(command, shell=True)
+
+    def logging(self, string):
+        print('시그널 도착')
+        self.terminal.append(string.strip())
 
 
 if __name__ == "__main__":

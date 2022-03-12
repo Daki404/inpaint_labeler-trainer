@@ -31,19 +31,19 @@ class TestUI(QWidget):
     @pyqtSlot()
     def press_btn1(self):
         command1 = "dir"
-        path = "./"
+        path = "lab/"
         self.worker.run_command(command1, cwd=path)
 
     @pyqtSlot()
     def press_btn2(self):
         command2 = "cd"
-        path = "./"
+        path = "lab/"
         self.worker.run_command(command2, cwd=path, shell=True)
 
     @pyqtSlot()
     def press_btn3(self):
         command3 = "test.bat"
-        path = "./"
+        path = "lab/"
         self.worker.run_command(command3, cwd=path, shell=True)
 
     @pyqtSlot(str)
