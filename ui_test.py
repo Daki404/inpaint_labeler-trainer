@@ -147,7 +147,6 @@ class Ui_Labler(object):
         self.label_9.crop(100)
 
 
-
 class PaintBrush(QLabel):
     def __init__(self, parent):
         self.img_stat = False
@@ -157,7 +156,7 @@ class PaintBrush(QLabel):
 
         self.clear_act = QShortcut(QKeySequence('Ctrl+Z'), self)
         self.clear_act.activated.connect(self.clear)
-        self.open('C:/Users/Seo/Desktop/Lab_work/Inpainting_labeler/imgs/sillicon.jpg')
+        self.open('imgs/sillicon.jpg')
 
     def open(self, image):
         print('open!')
