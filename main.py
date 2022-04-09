@@ -27,8 +27,27 @@ class PaintBrush(QGraphicsView):
         self.graphicPixmap = None
         self.back_img = None
         self.draw_img = None
+        self.pos_weight = QPointF(1.0, 1.0)
 
         self.setRenderHint(QPainter.HighQualityAntialiasing)
+
+    @property
+    def scaleFactor(self):
+        return 1.15
+
+    def wheelEvent(self, e):
+        if e.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            oldPos = self.mapToScene(e.pos())
+            if e.angleDelta().y() > 0:
+                scaleFactor = self.scaleFactor
+            else:
+                scaleFactor = 1 / self.scaleFactor
+            self.pos_weight = QPointF(self.pos_weight.x() * (1 / scaleFactor), self.pos_weight.y() * (1 / scaleFactor))
+            self.scale(scaleFactor, scaleFactor)
+
+            newPos = self.mapToScene(e.pos())
+            delta = newPos - oldPos
+            self.translate(delta.x(), delta.y())
 
     def moveEvent(self, e):
         rect = QRectF(self.rect())
@@ -38,25 +57,30 @@ class PaintBrush(QGraphicsView):
 
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self.start = e.pos()
-            self.end = e.pos()
+            e_pos = e.localPos()
+            self.start = QPointF(e_pos.x(), e_pos.y())
+            self.end = QPointF(e_pos.x(), e_pos.y())
 
     def mouseMoveEvent(self, e):
         if e.buttons() == Qt.LeftButton:
-            self.end = e.pos()
+            e_pos = e.localPos()
+            self.end = QPointF(e_pos.x(), e_pos.y())
             path = QPainterPath()
-            path.moveTo(self.start)
-            path.lineTo(self.end)
+
+            path.moveTo(QPointF(self.start.x(), self.start.y()))
+            path.lineTo(QPointF(self.end.x(), self.end.y()))
             self.scene.addPath(path, self.pen)
 
             painter = QPainter(self.draw_img)
             painter.setPen(self.pen)
-            painter.drawLine(self.start, e.pos())
+            painter.drawLine(QPointF(self.start.x() * self.pos_weight.x(), self.start.y() * self.pos_weight.y()),
+                             QPointF(e_pos.x() * self.pos_weight.x(), e_pos.y() * self.pos_weight.y()))
 
-            self.start = e.pos()
+            self.start = QPointF(e_pos.x(), e_pos.y())
 
     def set_image(self, img_path):
         self.back_img = QPixmap(img_path)
+        self.back_size = self.back_img.width(), self.back_img.height()
         self.back_img = self.back_img.scaled(int(self.scene.width()), int(self.scene.height()))
 
         if self.graphicPixmap is not None:
@@ -66,6 +90,9 @@ class PaintBrush(QGraphicsView):
 
         self.draw_img = QImage(QSize(int(self.scene.width()), int(self.scene.height())), QImage.Format_RGB32)
         self.draw_img.fill(Qt.black)
+
+    def get_size(self):
+        return self.back_size
 
 
 class MainClass(QWidget, form_class):
@@ -153,6 +180,12 @@ class MainClass(QWidget, form_class):
         if ((y_scan := int(self.img_show.scene.height()) - size) < 0) or ((x_scan := int(self.img_show.scene.width()) - size) < 0):
             print("size error")
         else:
+            print(1)
+            w, h = self.img_show.get_size()
+            print(2)
+            self.img_show.draw_img = self.img_show.draw_img.scaled(w, h)
+            print(3)
+
             self.img_show.draw_img.save('back_tmp.jpg')
             self.img_show.back_img.save('real_tmp.jpg')
 
@@ -173,7 +206,6 @@ class MainClass(QWidget, form_class):
         self.worker.run_command(command, shell=True)
 
     def logging(self, string):
-        print('시그널 도착')
         self.terminal.append(string.strip())
 
 
